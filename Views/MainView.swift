@@ -54,14 +54,9 @@ struct MainView: View {
                             .padding(8)
                             .background(Color(.systemBackground))
                             .cornerRadius(20)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                            )
                             .animation(.easeInOut(duration: 0.3), value: isSearchFieldFocused)
                             .onTapGesture {
-                                // Focus the search field when tapped
-                                isSearchFieldFocused = true
+                                isSearchFieldFocused = true //focus when tapped
                             }
                             
                         }//header
@@ -135,7 +130,7 @@ struct MainView: View {
             }
             .onChange(of: showingSearch) { newValue in
                 if !newValue {
-                    searchText = "" // Clear search text when navigation dismisses
+                    searchText = "" // Clear search
                 }
             }
         }
