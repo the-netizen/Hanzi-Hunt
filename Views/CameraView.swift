@@ -103,7 +103,7 @@ struct CameraView: View {
             // hints
             Text("Capture the hanzi")
                 .font(.subheadline)
-                .foregroundColor(Color(.systemBackground).opacity(0.8))
+                .foregroundColor(Color(.white).opacity(0.7))
                 .padding(.bottom, 40)
             
             Text(word.hanzi)
@@ -211,7 +211,7 @@ struct CameraView: View {
         }
         .padding(.bottom, 80)
         .padding(.top, 20)
-        .background(Color(red: 79/255, green: 89/255, blue: 114/255).opacity(0.8))
+        .background(Color(red: 79/255, green: 89/255, blue: 114/255).opacity(0.7))
         }
     }
 

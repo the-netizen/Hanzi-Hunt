@@ -5,6 +5,7 @@ import SwiftUI
 struct SearchView: View {
     @ObservedObject var viewModel: SearchVM
     @State private var searchText = ""
+    @State private var selectedWord: Vocabulary? = nil
     @Environment(\.dismiss) private var dismiss
     
     let initialSearchText: String
@@ -19,81 +20,82 @@ struct SearchView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.gray)
+        ZStack {
+            VStack(spacing: 0) {
+                SearchBar(
+                    searchText: $searchText,
+                    placeholder: "Search using hanzi, pinyin, or English"
+                )
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
                 
-                TextField("Search by hanzi, pinyin, or English", text: $searchText)
-                    .textFieldStyle(.plain)
-                    .autocorrectionDisabled()
+                Divider()
                 
-                if !searchText.isEmpty {
-                    Button {
-                        searchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.gray)
+                // Results
+                if searchText.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray.opacity(0.5))
+                        
+                        Text("Look up any object")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        
+                        Text("Try: \"人\", \"ren\", or \"person\"")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                     }
+                    .frame(maxHeight: .infinity)
                 }
-            }
-            .padding(12)
-            .background(Color(.systemBackground))
-            .cornerRadius(20)
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
-            .padding(.bottom, 12)
-            
-            Divider()
-            
-            // Results
-            if searchText.isEmpty {
-                VStack(spacing: 16) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 60))
-                        .foregroundColor(.gray.opacity(0.5))
-                    
-                    Text("Search for Chinese words")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    Text("Try: \"人\", \"ren\", or \"person\"")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                else if searchResults.isEmpty {
+                    VStack(spacing: 16) {
+                        Text("No words found")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        
+                        Text("Try a different object 🥀")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxHeight: .infinity)
                 }
-                .frame(maxHeight: .infinity)
-            }
-            else if searchResults.isEmpty {
-                VStack(spacing: 16) {
-                    Text("No words found")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    Text("Try a different search term")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxHeight: .infinity)
-            }
-            else {
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        ForEach(searchResults) { word in
-                            SearchResultCard(word: word)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
+                else {
+                    ScrollView {
+                        LazyVStack(spacing: 8) {
+                            ForEach(searchResults) { word in
+                                SearchResultRow(word: word) {
+                                    selectedWord = word
+                                }
+                            }
                         }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
                     }
-                    .padding(.vertical, 8)
                 }
             }
-        }
-        .navigationTitle("Find Words")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(false)
-        .onAppear {
-            if !initialSearchText.isEmpty {
-                searchText = initialSearchText
+            .navigationTitle("Find Words")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(false)
+            .onAppear {
+                if !initialSearchText.isEmpty {
+                    searchText = initialSearchText
+                }
+            }
+            
+            // Modal overlay
+            if let word = selectedWord {
+                Color.black.opacity(0.5)
+                    .ignoresSafeArea()
+                    .onTapGesture { selectedWord = nil }
+                
+                WordCardView(
+                    pinyin: word.pinyin,
+                    hanzi: word.hanzi,
+                    english: word.english
+                )
+                .onTapGesture { selectedWord = nil }
             }
         }
     }
@@ -207,8 +209,7 @@ struct SearchResultsOverlay: View {
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
             }
-            .background(Color.black.opacity(0.6))
-            
+//            .background(Color.black.opacity(0.6))
             Spacer()
         }
     }
@@ -223,39 +224,43 @@ struct SearchResultRow: View {
             HStack(spacing: 16) {
                 // Hanzi
                 Text(word.hanzi)
-                    .font(.system(size: 32))
+                    .font(.system(size: 20))
                     .foregroundColor(.white)
-                    .frame(width: 50)
-
-                // Info
-//                VStack(alignment: .leading, spacing: 4) {
-                    Text(word.object.capitalized)
-                        .font(.headline)
-                        .foregroundColor(.white)
-                    
-//                    HStack(spacing: 4) {
-//                        Text(word.pinyin)
-//                            .font(.subheadline)
-//                            .foregroundColor(.white.opacity(0.7))
-//                        Text("•")
-//                            .foregroundColor(.white.opacity(0.5))
-//                        Text(word.english)
-//                            .font(.subheadline)
-//                            .foregroundColor(.white.opacity(0.7))
-//                    }
-//                }
-
+                
+                Text(word.pinyin)
+                    .font(.system(size: 15))
+                    .foregroundColor(.white)
+                
                 Spacer()
 
-                Image(systemName: "chevron.right")
-                    .foregroundColor(.white.opacity(0.5))
+                Text(word.english.capitalized)
+                    .font(.system(size: 15))
+                    .foregroundColor(.white)
+                    .padding(.trailing, 10)
+                
+//                Image(systemName: "chevron.right")
+//                    .foregroundColor(.white.opacity(0.5))
+                if word.isCollected {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                    }
+                    .font(.caption)
+                    .foregroundColor(.green)
+                }else {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle")
+                    }
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                }
             }
             .padding(12)
-            .background(Color.white.opacity(0.1))
+            .background(Color(red: 79/255, green: 89/255, blue: 114/255).opacity(0.5))
             .cornerRadius(12)
         }
     }
 }
+    
 
 #Preview {
     NavigationStack {
