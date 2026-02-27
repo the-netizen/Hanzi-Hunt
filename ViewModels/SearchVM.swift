@@ -2,12 +2,11 @@ import Foundation
 import SwiftUI
 import UIKit
 
-// MARK: - Camera States
 enum CameraState {
-    case scanning              // AR view, detecting objects, showing 3D hanzi
-    case showingCard          // 2D card appeared after capture
-    case tracing              // User is tracing the hanzi
-    case traced               // Tracing complete, showing full info
+    case scanning       // User selecting object
+    case showingCard    // Card appeared after capture
+    case tracing        // User tracing hanzi
+    case traced         // Tracing complete
 }
 
 @MainActor
@@ -15,27 +14,26 @@ class SearchVM: ObservableObject {
     @Published var allVocabulary: [Vocabulary]
     @Published var murals: [Mural]
     
-    // MARK: - Camera State Management
     @Published var cameraState: CameraState = .scanning
     @Published var detectedWord: Vocabulary? = nil
     @Published var capturedImage: UIImage? = nil
     @Published var showingGallery = false
     
-    // Animation states
+    @Published var cameraSearchText = ""
+    @Published var showingCameraSearchResults = false
+    
+    // Card animation
     @Published var cardAnimatingToGallery = false
-    @Published var cardOffset: CGSize = .zero
+    @Published var cardOffset: CGSize = .zero //?? useless
+    
     
     init() {
-        // For playground projects, we'll use sample data directly
-        // In a full app, you could load from JSON
-        self.allVocabulary = Vocabulary.samples
+        self.allVocabulary = VocabularyLoader.loadFromJSON()
         self.murals = Mural.samples
-        
-        print("✅ Loaded \(allVocabulary.count) vocabulary words from samples")
     }
         
     func search(query: String) -> [Vocabulary] {
-        guard !query.isEmpty else { return allVocabulary }
+        guard !query.isEmpty else { return [] }
         
         let lowercased = query.lowercased()
         return allVocabulary.filter { word in
@@ -46,48 +44,53 @@ class SearchVM: ObservableObject {
         }
     }
     
-    // MARK: - AR Detection
+    var cameraSearchResults: [Vocabulary] {
+        search(query: cameraSearchText)
+    }
     
-    /// Find vocabulary word matching the detected object label
+    func updateCameraSearch(_ text: String) {
+        cameraSearchText = text
+        showingCameraSearchResults = !text.isEmpty
+    }
+    
+    func clearCameraSearch() {
+        cameraSearchText = ""
+        showingCameraSearchResults = false
+    }
+        
+    // Select object manually
+    func selectObject(_ objectName: String) {
+        if let word = findWord(for: objectName) {
+            detectedWord = word
+            clearCameraSearch() // Auto-close search after selection
+            print("✅ Selected: \(objectName) → \(word.hanzi)")
+        } else {
+            print("⚠️ No vocabulary found for: \(objectName)")
+        }
+    }
+    
+    // select word from search
+    func selectWord(_ word: Vocabulary) {
+        detectedWord = word
+        clearCameraSearch() // Auto-close search after selection
+        print("✅ Selected word: \(word.object) → \(word.hanzi)")
+    }
+    
+    // Find  by object name
     func findWord(for objectLabel: String) -> Vocabulary? {
-        let normalized = normalizeObjectLabel(objectLabel)
-        return allVocabulary.first { $0.object.lowercased() == normalized }
+        return allVocabulary.first { $0.object.lowercased() == objectLabel.lowercased() }
     }
     
-    /// Normalize object labels from ML model
-    private func normalizeObjectLabel(_ label: String) -> String {
-        let lowercased = label.lowercased()
-        
-        // Handle common ML model variations
-        let mappings: [String: String] = [
-            "laptop computer": "laptop",
-            "computer keyboard": "keyboard",
-            "cellular telephone": "phone",
-            "mobile phone": "phone",
-            "dining table": "dining table",
-            "potted plant": "potted plant",
-            "wine bottle": "bottle",
-            "traffic light": "traffic light",
-            "fire hydrant": "fire hydrant",
-            "stop sign": "stop sign",
-            "parking meter": "parking meter",
-            "tennis racket": "tennis racket",
-            "wine glass": "wine glass",
-            "teddy bear": "teddy bear",
-            "hair drier": "hair dryer"
-        ]
-        
-        return mappings[lowercased] ?? lowercased
+    func clearSelection() {
+        detectedWord = nil
+        clearCameraSearch()
     }
-    
-    // MARK: - Collection Management
-    
-    /// Mark a word as collected after user traces it
-    func collectWord(id: UUID) {
-        if let index = allVocabulary.firstIndex(where: { $0.id == id }) {
+        
+    func collectWord(object: String) {
+        if let index = allVocabulary.firstIndex(where: { $0.object == object }) {
             allVocabulary[index].isCollected = true
             print("✅ Collected: \(allVocabulary[index].hanzi)")
-            // TODO: Save to UserDefaults for persistence
+            // TODO: Save to UserDefaults
         }
     }
     
@@ -99,57 +102,44 @@ class SearchVM: ObservableObject {
         return allVocabulary.filter { !$0.isCollected }
     }
     
-    var totalProgress: (collected: Int, total: Int) {
+    var totalProgress: (collected: Int, total: Int) { //is this needed?
         let collected = collectedWords().count
         let total = allVocabulary.count
         return (collected, total)
     }
     
-    /// Progress percentage (0.0 to 1.0)
     var progressPercentage: Double {
         let progress = totalProgress
         guard progress.total > 0 else { return 0.0 }
         return Double(progress.collected) / Double(progress.total)
     }
-    
-    /// Whether the capture button should be enabled
+        
     var canCapture: Bool {
         cameraState == .scanning && detectedWord != nil
     }
     
-    /// Whether to show the floating 3D Hanzi overlay
-    var shouldShow3DHanzi: Bool {
-        cameraState == .scanning && detectedWord != nil
+    var canShow3DHanzi: Bool {
+        cameraState == .scanning && detectedWord != nil && !showingCameraSearchResults
     }
     
-    /// Whether to show the 2D word card overlay
-    var shouldShowWordCard: Bool {
+    var canShowWordCard: Bool {
         cameraState != .scanning && !cardAnimatingToGallery
     }
     
-    /// Whether to show tracing instructions
-    var shouldShowTracingInstructions: Bool {
+    var canShowTracingInstructions: Bool {
         cameraState == .showingCard || cameraState == .tracing
     }
     
-    /// Whether to show completion info (pinyin, english, etc.)
-    var shouldShowCompletionInfo: Bool {
+    var canShowCompletionInfo: Bool {
         cameraState == .traced
     }
     
-    /// Whether to show the tracing simulation button
-    var shouldShowTracingButton: Bool {
+    var canShowTracingButton: Bool {
         cameraState == .showingCard || cameraState == .tracing
     }
-    
-    // MARK: - Camera Actions
-    
-    func simulateDetection() {
-        // Simulate detecting a "cup" after a delay
-        Task {
-            try await Task.sleep(for: .seconds(1.0))
-            detectedWord = findWord(for: "cup")
-        }
+        
+    var canShowSelectionScroll: Bool {
+        cameraState == .scanning && !showingCameraSearchResults
     }
     
     func captureObject() {
@@ -158,9 +148,6 @@ class SearchVM: ObservableObject {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
             cameraState = .showingCard
         }
-        
-        // Simulate captured image (in real app, this would be AR snapshot)
-        capturedImage = nil
     }
     
     func completeTracing() {
@@ -170,12 +157,10 @@ class SearchVM: ObservableObject {
             cameraState = .traced
         }
         
-        // Collect the word
-        collectWord(id: word.id)
+        collectWord(object: word.object)
     }
     
     func animateCardToGallery() {
-        // Calculate position to animate to (bottom-left thumbnail)
         let screenWidth = UIScreen.main.bounds.width
         let screenHeight = UIScreen.main.bounds.height
         
@@ -187,7 +172,6 @@ class SearchVM: ObservableObject {
             cardOffset = CGSize(width: targetX, height: targetY)
         }
         
-        // Reset state after animation
         Task {
             try await Task.sleep(for: .seconds(0.6))
             resetCameraState()
@@ -199,36 +183,30 @@ class SearchVM: ObservableObject {
         detectedWord = nil
         cardAnimatingToGallery = false
         cardOffset = .zero
-        
-        // Simulate next detection
-        simulateDetection()
     }
 }
+
+// MARK: - Vocabulary Loader
 
 struct VocabularyData: Codable {
     let vocabulary: [Vocabulary]
-    
 }
 
 class VocabularyLoader {
-
-    /// Load vocabulary from the JSON file in the bundle
     static func loadFromJSON() -> [Vocabulary] {
-        guard let url = Bundle.main.url(forResource: "vocabulary", withExtension: "json") else {
-            print("❌ Could not find vocabulary.json in bundle")
-            return Vocabulary.samples
+            guard let data = Vocabulary.vocabularyJSON.data(using: .utf8) else {
+                print("❌ Could not convert JSON string to data")
+                return []
+            }
+            
+            do {
+                let decoder = JSONDecoder()
+                let vocabularyData = try decoder.decode(VocabularyData.self, from: data)
+                print("✅ Loaded \(vocabularyData.vocabulary.count) words from JSON String")
+                return vocabularyData.vocabulary
+            } catch {
+                print("❌ Error decoding vocabulary: \(error)")
+                return []
+            }
         }
-
-        do {
-            let data = try Data(contentsOf: url)
-            let decoder = JSONDecoder()
-            let vocabularyData = try decoder.decode(VocabularyData.self, from: data)
-            print("✅ Loaded \(vocabularyData.vocabulary.count) words from JSON")
-            return vocabularyData.vocabulary
-        } catch {
-            print("❌ Error loading vocabulary.json: \(error)")
-            print("Using sample data instead")
-            return Vocabulary.samples
-        }
-    }
 }
