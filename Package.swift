@@ -20,7 +20,7 @@ let package = Package(
             teamIdentifier: "UR2GTWY975",
             displayVersion: "1.0",
             bundleVersion: "1",
-            appIcon: .placeholder(icon: .chatMessage),
+            appIcon: .placeholder(icon: .boat),
             accentColor: .presetColor(.cyan),
             supportedDeviceFamilies: [
                 .pad,
@@ -32,6 +32,10 @@ let package = Package(
                 .landscapeLeft,
                 .portraitUpsideDown(.when(deviceFamilies: [.pad]))
             ],
+            capabilities: [
+                .fileAccess(.pictureFolder, mode: .readWrite)
+                .camera(purposeString: "Hanzi Hunt needs camera access to display Chinese characters on objects.")
+            ],
             appCategory: .education
         )
     ],
@@ -41,5 +45,5 @@ let package = Package(
             path: "."
         )
     ],
-    swiftLanguageVersions: [.version("6")]
+    swiftLanguageModes: [.version("6")]
 )
