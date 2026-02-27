@@ -5,9 +5,23 @@ struct Vocabulary: Identifiable, Codable{
     let hanzi: String
     let pinyin: String
     let english: String
-    var isCollected: Bool
+    var isCollected: Bool = false
     
     var id: String {object} //make id = object
+    
+    private enum CodingKeys: String, CodingKey { //to match keys in json
+        case object, hanzi, pinyin, english, isCollected
+    }
+    
+    init(from decoder: Decoder) throws {
+           let container = try decoder.container(keyedBy: CodingKeys.self)
+           self.object = try container.decode(String.self, forKey: .object)
+           self.hanzi = try container.decode(String.self, forKey: .hanzi)
+           self.pinyin = try container.decode(String.self, forKey: .pinyin)
+           self.english = try container.decode(String.self, forKey: .english)
+           // Default to false if isCollected is missing in JSON
+           self.isCollected = try container.decodeIfPresent(Bool.self, forKey: .isCollected) ?? false
+       }
 }
 
 extension Vocabulary {
