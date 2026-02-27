@@ -10,7 +10,6 @@ struct MainView: View {
     @FocusState private var isSearchFieldFocused: Bool
     
     private func performSearch() {
-//        let trimmedText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         if !searchText.isEmpty {
             isSearchFieldFocused = false
             showingSearch = true
@@ -23,15 +22,8 @@ struct MainView: View {
                 VStack(spacing: 0) {
                     VStack {
                         HStack{
-                            // Gallery button
-                            Button{
-                                showingGallery = true
-                            }label: {
-                                Image(systemName: "photo.on.rectangle")
-                                    .resizable()
-                                    .foregroundStyle(Color(.white))
-                                    .frame(width: 30, height: 30)
-                            }
+                            //Logo image will be here
+                            
                             Spacer()
                             
                             // Searchbar
@@ -59,43 +51,21 @@ struct MainView: View {
                         }//header
                         .padding(.horizontal, 25)
                         .padding(.top, 20)
-                    }
-                    .background(Color(red: 50/255, green: 60/255, blue: 69/255))
+                    }//v
+//                    .background(Color(red: 50/255, green: 60/255, blue: 69/255))
+                    .background(Color(red: 79/255, green: 89/255, blue: 114/255))
                     .zIndex(1) // Keep header above other content
                     
-                    VStack {
-                        Spacer()
-                            .frame(height: 50)
+                    
+                    ZStack(alignment: .bottom) {
+                        GalleryGrid(viewModel: viewModel)
+                            .padding(.top, 80)
                         
-                        // Murals
-                        VStack(alignment: .leading){
-                            Text("Collections")
-                                .foregroundStyle(Color(.white))
-                                .fontWeight(.bold)
-                                .padding(.horizontal, 20)
-                            
-                            TabView { //page controls
-                                ForEach(viewModel.murals) { mural in
-                                    MuralCardView(
-                                        mural: mural,
-                                        vocabulary: viewModel.allVocabulary
-                                    )
-                                    .padding(.horizontal, 20)
-                                }
-                            }
-                            .tabViewStyle(.page(indexDisplayMode: .always))
-                            .indexViewStyle(.page(backgroundDisplayMode: .never))
-                            .frame(height: 500)
-                        }
-                        
-                        Spacer()
-                            .frame(height: 50)
-                        
-                        // Camera Button
-                        Button{
+                        // Camera Button on top
+                        Button {
                             showingCamera = true
-                        }label: {
-                            ZStack{
+                        } label: {
+                            ZStack {
                                 Circle()
                                     .fill(Color(.systemBackground))
                                     .frame(width: 80, height: 80)
@@ -108,22 +78,17 @@ struct MainView: View {
                                     .font(.system(size: 32))
                             }
                         }
-                        
-                        Spacer()
-                            .frame(height: 100) // Extra bottom padding for keyboard
+                        .padding(.bottom, 50)
                     }
-                    .background(Color(red: 50/255, green: 60/255, blue: 69/255))
+                    .background(Color(red: 79/255, green: 89/255, blue: 114/255))
                 }
                 // -- tap outside to dismiss focus/keyboard
                 .contentShape(Rectangle())
                 .onTapGesture {
                     isSearchFieldFocused = false
                 }
-            }
+            }//geometry
             .ignoresSafeArea(.keyboard, edges: .bottom) // Prevent automatic keyboard avoidance
-            .navigationDestination(isPresented: $showingGallery) {
-                GalleryView(viewModel: viewModel)
-            }
             .navigationDestination(isPresented: $showingCamera) {
                 CameraView(viewModel: viewModel)
             }
@@ -135,6 +100,6 @@ struct MainView: View {
                     searchText = "" // Clear search
                 }
             }
-        }
+        }//nav
+    }//body
     }
-}
