@@ -58,7 +58,7 @@ struct MainView: View {
                     
                     
                     ZStack(alignment: .bottom) {
-                        GalleryGrid(viewModel: viewModel)
+                        GalleryGrid(viewModel: viewModel, onTap: { _ in })
                             .padding(.top, 80)
                         
                         // Camera Button on top

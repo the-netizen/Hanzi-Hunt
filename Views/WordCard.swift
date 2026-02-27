@@ -18,13 +18,13 @@ struct WordCard: View {
                 if viewModel.canShowTracingInstructions {
                     Text("Trace the hanzi to collect this word")
                         .font(.subheadline)
-                        .foregroundColor(Color(.systemBackground).opacity(0.6))
+                        .foregroundColor(Color(.white))
                         .padding(.bottom, 40)
                     
                 } else if viewModel.canShowCompletionInfo {
                     Text("Tap anywhere to continue...")
                         .font(.subheadline)
-                        .foregroundColor(Color(.systemBackground).opacity(0.6))
+                        .foregroundColor(Color(.systemBackground))
                         .padding(.bottom, 40)
                 }
                 
@@ -32,27 +32,16 @@ struct WordCard: View {
                     Button {
                         viewModel.completeTracing()
                     } label: {
-                        Text("Simulate Tracing Complete")
-                            
+                        Text("Done")                            
                     }
                 }
-                // Card
+                // WordCard
                 VStack(spacing: 16) {
-                    // pinyin
-                    Text(viewModel.canShowCompletionInfo ? (viewModel.detectedWord?.pinyin ?? "") : "")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .foregroundColor(viewModel.canShowCompletionInfo ? .primary : .clear)
-                    
-                    // hanzi
-                    Text(viewModel.detectedWord?.hanzi ?? "")
-                        .font(.system(size: 100))
-                        .foregroundColor(.primary)
-                    
-                    // translation
-                    Text(viewModel.canShowCompletionInfo ? (viewModel.detectedWord?.english ?? "") : "")
-                        .font(.headline)
-                        .foregroundColor(viewModel.canShowCompletionInfo ? .secondary : .clear)
+                    WordCardView(
+                        pinyin: viewModel.canShowCompletionInfo ? (viewModel.detectedWord?.pinyin ?? "") : "",
+                        hanzi: viewModel.detectedWord?.hanzi ?? "",
+                        english: viewModel.canShowCompletionInfo ? (viewModel.detectedWord?.english ?? "") : ""
+                    )
                 }
                 .frame(width: 300, height: 300)
                 .background(Color(red: 212/255, green: 219/255, blue: 227/255))
