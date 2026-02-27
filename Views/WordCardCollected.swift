@@ -1,18 +1,28 @@
-//
-//  SwiftUIView.swift
-//  Hanzi Hunt
-//
-//  Created by Naima Khan on 27/02/2026.
-//
-
 import SwiftUI
 
-struct SwiftUIView: View {
+struct WordCardCollected: View {
+    let word: CollectedWord
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
-}
+        GeometryReader { geo in
+            ZStack {
+                if let image = word.image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geo.size.width, height: geo.size.width)
+                        .clipped()
+                } else {
+                    Color.gray // backup
+                }
 
-#Preview {
-    SwiftUIView()
+                Text(word.vocabulary.hanzi)
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(.white)
+                    .shadow(color: .black, radius: 2, x: 1, y: 1)
+                    .padding(.bottom, 6)
+            }
+            .aspectRatio(1, contentMode: .fit)
+        }
+    }
 }

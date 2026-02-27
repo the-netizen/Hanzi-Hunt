@@ -14,7 +14,7 @@ struct WordCard: View {
                 }
             
             VStack(spacing: 20) {
-                // helper text - in future, should only appear first time user is tracing
+                // helper text should only appear first time user is tracing- in future
                 if viewModel.canShowTracingInstructions {
                     Text("Trace the hanzi to collect this word")
                         .font(.subheadline)
@@ -60,7 +60,7 @@ struct WordCard: View {
                 .shadow(color: .black.opacity(0.3), radius: 20, y: 10)
                 
             }
-            .offset(y: -80) //move up
+//            .offset(y: -80) //move up
         }
     }
 }
