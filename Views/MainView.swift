@@ -36,22 +36,19 @@ struct MainView: View {
                             
                             // Searchbar
                             HStack{
-                                TextField("Find words", text: $searchText)
-                                    .textFieldStyle(PlainTextFieldStyle())
-                                    .focused($isSearchFieldFocused)
-                                    .onSubmit {
+                                SearchBar(
+                                    searchText: $searchText,
+                                    placeholder: "Find words",
+                                    onSubmit: {
                                         performSearch()
+                                    },
+                                    onClear: {
+                                        searchText = ""
                                     }
-                                
-                                Button {
-                                    performSearch()
-                                } label: {
-                                    Image(systemName: "magnifyingglass")
-                                        .foregroundColor(.gray)
-                                }
+                                )
+                                .focused($isSearchFieldFocused)
                             }
                             .frame(width: 150)
-                            .padding(8)
                             .background(Color(.systemBackground))
                             .cornerRadius(20)
                             .animation(.easeInOut(duration: 0.3), value: isSearchFieldFocused)
@@ -66,56 +63,61 @@ struct MainView: View {
                     .background(Color(red: 50/255, green: 60/255, blue: 69/255))
                     .zIndex(1) // Keep header above other content
                     
-                        VStack {
-                            Spacer()
-                                .frame(height: 50)
+                    VStack {
+                        Spacer()
+                            .frame(height: 50)
+                        
+                        // Murals
+                        VStack(alignment: .leading){
+                            Text("Collections")
+                                .foregroundStyle(Color(.white))
+                                .fontWeight(.bold)
+                                .padding(.horizontal, 20)
                             
-                            // Murals
-                            VStack(alignment: .leading){
-                                Text("Collections")
-                                    .foregroundStyle(Color(.white))
-                                    .fontWeight(.bold)
+                            TabView { //page controls
+                                ForEach(viewModel.murals) { mural in
+                                    MuralCardView(
+                                        mural: mural,
+                                        vocabulary: viewModel.allVocabulary
+                                    )
                                     .padding(.horizontal, 20)
-                                
-                                TabView { //page controls
-                                        ForEach(viewModel.murals) { mural in
-                                            MuralCardView(
-                                                mural: mural,
-                                                vocabulary: viewModel.allVocabulary
-                                            )
-                                            .padding(.horizontal, 20)
-                                        }
-                                    }
-                                    .tabViewStyle(.page(indexDisplayMode: .always))
-                                    .indexViewStyle(.page(backgroundDisplayMode: .never))
-                                    .frame(height: 500)
-                            }
-                            
-                            Spacer()
-                                .frame(height: 50)
-                            
-                            // Camera Button
-                            Button{
-                                showingCamera = true
-                            }label: {
-                                ZStack{
-                                    Circle()
-                                        .fill(Color(.systemBackground))
-                                        .frame(width: 80, height: 80)
-                                        .overlay(
-                                            Circle()
-                                                .stroke(.black, lineWidth: 2)
-                                        )
-                                    Image(systemName: "camera")
-                                        .foregroundStyle(Color.primary)
-                                        .font(.system(size: 32))
                                 }
                             }
-                            
-                            Spacer()
-                                .frame(height: 100) // Extra bottom padding for keyboard
+                            .tabViewStyle(.page(indexDisplayMode: .always))
+                            .indexViewStyle(.page(backgroundDisplayMode: .never))
+                            .frame(height: 500)
                         }
+                        
+                        Spacer()
+                            .frame(height: 50)
+                        
+                        // Camera Button
+                        Button{
+                            showingCamera = true
+                        }label: {
+                            ZStack{
+                                Circle()
+                                    .fill(Color(.systemBackground))
+                                    .frame(width: 80, height: 80)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(.black, lineWidth: 2)
+                                    )
+                                Image(systemName: "camera")
+                                    .foregroundStyle(Color.primary)
+                                    .font(.system(size: 32))
+                            }
+                        }
+                        
+                        Spacer()
+                            .frame(height: 100) // Extra bottom padding for keyboard
+                    }
                     .background(Color(red: 50/255, green: 60/255, blue: 69/255))
+                }
+                // -- tap outside to dismiss focus/keyboard
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    isSearchFieldFocused = false
                 }
             }
             .ignoresSafeArea(.keyboard, edges: .bottom) // Prevent automatic keyboard avoidance
