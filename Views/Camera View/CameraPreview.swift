@@ -104,6 +104,7 @@ class PhotoHandler: NSObject, AVCapturePhotoCaptureDelegate, @unchecked Sendable
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         guard let data = photo.fileDataRepresentation(),
               let image = UIImage(data: data) else {
+            //testing
             print("❌ Failed to capture image")
             return
         }

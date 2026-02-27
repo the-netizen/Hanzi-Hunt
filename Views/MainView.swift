@@ -19,7 +19,7 @@ struct MainView: View {
     var body: some View {
         NavigationStack{
             GeometryReader { geometry in
-                VStack(spacing: 0) {
+                VStack(spacing: 0){
                     VStack {
                         HStack{
                             //Logo image will be here
@@ -48,18 +48,26 @@ struct MainView: View {
                                 isSearchFieldFocused = true //focus when tapped
                             }
                             
-                        }//header
+                        }//header hstack
                         .padding(.horizontal, 25)
-                        .padding(.top, 20)
-                    }//v
+                    }//header v
+                    .padding(.vertical, 20)
 //                    .background(Color(red: 50/255, green: 60/255, blue: 69/255))
                     .background(Color(red: 79/255, green: 89/255, blue: 114/255))
                     .zIndex(1) // Keep header above other content
                     
                     
                     ZStack(alignment: .bottom) {
-                        GalleryGrid(viewModel: viewModel, onTap: { _ in })
-                            .padding(.top, 80)
+                        VStack {
+                            Text("Your collection")
+                                .font(.title2)
+                                .fontWeight(.medium)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 20)
+                            GalleryGrid(viewModel: viewModel, onTap: { _ in })
+                        }
+                        .padding(.top, 80)
                         
                         // Camera Button on top
                         Button {
