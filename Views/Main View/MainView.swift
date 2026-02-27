@@ -23,6 +23,10 @@ struct MainView: View {
                     VStack {
                         HStack{
                             //Logo image will be here
+                            Image(systemName: "logo1.png")
+                                .resizable()
+//                                .font(.system(size: 24))
+//                                .foregroundColor(.white)
                             
                             Spacer()
                             

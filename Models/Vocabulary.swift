@@ -13,6 +13,7 @@ struct Vocabulary: Identifiable, Codable{
         case object, hanzi, pinyin, english, isCollected
     }
     
+    //to read words from a JSON file automatically
     init(from decoder: Decoder) throws {
            let container = try decoder.container(keyedBy: CodingKeys.self)
            self.object = try container.decode(String.self, forKey: .object)
@@ -28,7 +29,7 @@ extension Vocabulary {
     static let quickSelectObjects: [String] = [
         "person", "dog", "cat",
         "book", "cup", "cell phone",
-        "chair", "dining table",
+        "chair", "table",
         "laptop",
         "tree", "flower",
         "car", "bicycle",
@@ -58,7 +59,7 @@ extension Vocabulary {
             {"hanzi": "长颈鹿", "pinyin": "chángjǐnglù", "english": "giraffe", "object": "giraffe"},
             {"hanzi": "斑马", "pinyin": "bānmǎ", "english": "zebra", "object": "zebra"},
             {"hanzi": "椅子", "pinyin": "yǐzi", "english": "chair", "object": "chair"},
-            {"hanzi": "桌子", "pinyin": "zhuōzi", "english": "table", "object": "dining table"},
+            {"hanzi": "桌子", "pinyin": "zhuōzi", "english": "table", "object": "table"},
             {"hanzi": "床", "pinyin": "chuáng", "english": "bed", "object": "bed"},
             {"hanzi": "沙发", "pinyin": "shāfā", "english": "sofa", "object": "couch"},
             {"hanzi": "书架", "pinyin": "shūjià", "english": "bookshelf", "object": "bookshelf"},

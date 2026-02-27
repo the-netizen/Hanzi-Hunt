@@ -226,7 +226,6 @@ class SearchVM: ObservableObject {
         cardOffset = .zero
         capturedImage = nil
         shouldCapturePhoto = false
-//        isCapturing = false
     }
 }
 

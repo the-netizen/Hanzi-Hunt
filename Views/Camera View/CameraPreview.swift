@@ -5,7 +5,7 @@ struct CameraPreview: UIViewRepresentable {
     let onPhotoCaptured: (UIImage) -> Void
     let shouldCapture: Bool
     
-    class CameraView: UIView {
+    class CameraUIView: UIView {
         var session: AVCaptureSession?
         var photoOutput: AVCapturePhotoOutput?
         var previewLayer: AVCaptureVideoPreviewLayer?
@@ -72,14 +72,14 @@ struct CameraPreview: UIViewRepresentable {
         }
     }
     
-    func makeUIView(context: Context) -> CameraView {
-        let view = CameraView()
+    func makeUIView(context: Context) -> CameraUIView {
+        let view = CameraUIView()
         view.photoCallback = onPhotoCaptured
         context.coordinator.cameraView = view
         return view
     }
     
-    func updateUIView(_ uiView: CameraView, context: Context) {
+    func updateUIView(_ uiView: CameraUIView, context: Context) {
         if shouldCapture {
             uiView.capturePhoto()
         }
@@ -90,7 +90,7 @@ struct CameraPreview: UIViewRepresentable {
     }
     
     class Coordinator {
-        var cameraView: CameraView?
+        var cameraView: CameraUIView?
     }
 }
 
