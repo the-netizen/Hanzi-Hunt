@@ -1,39 +1,107 @@
 import SwiftUI
+import AVFoundation
 
 struct CameraView: View {
     @ObservedObject var viewModel: SearchVM
     @Environment(\.dismiss) private var dismiss
+    @FocusState private var isSearchFocused: Bool
     
     var body: some View {
         ZStack {
-            Color.gray
+            CameraPreview(
+                onPhotoCaptured: { image in
+                    viewModel.handlePhotoCaptured(image)
+                },
+                shouldCapture: viewModel.shouldCapturePhoto
+            )
+                .ignoresSafeArea()
+                .onTapGesture {
+                    isSearchFocused = false
+                }
             
-            if viewModel.shouldShow3DHanzi, let word = viewModel.detectedWord {
+            //hanzi
+            if viewModel.canShow3DHanzi, let word = viewModel.detectedWord {
                 floating3DHanzi(word: word)
             }
             
-            if viewModel.shouldShowWordCard {
-                wordCard
+            //wordcard
+            if viewModel.canShowWordCard {
+                WordCard(viewModel: viewModel)
             }
-            VStack {
+            
+            VStack(spacing: 0) {
+                VStack {
+                    HStack {
+                        // back button
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "chevron.left")
+                                .foregroundColor(.white)
+                                .font(.system(size: 20, weight: .semibold))
+                                .frame(width: 32, height: 32)
+                        }
+                        
+                        Spacer()
+                        
+                        HStack {
+                            SearchBar(
+                                searchText: $viewModel.cameraSearchText,
+                                placeholder: "Find words",
+                                onSubmit: {
+                                    // On submit, select first result if available
+                                    if let first = viewModel.cameraSearchResults.first {
+                                        viewModel.selectWord(first)
+                                    }
+                                    isSearchFocused = false //dismiss keyboard
+                                },
+                                onClear: {
+                                    viewModel.clearCameraSearch()
+                                }
+                            )
+                            .focused($isSearchFocused)
+                            .onChange(of: viewModel.cameraSearchText) { newValue in
+                                viewModel.updateCameraSearch(newValue)
+                            }
+                        }
+                        .frame(width: 150)
+                        .cornerRadius(20)
+                    }//back and search
+                    .padding(.horizontal, 25)
+                    .padding(.top, 80)
+                    .padding(.bottom, 10)
+                }//v - header
+                .background(Color(red: 79/255, green: 89/255, blue: 114/255).opacity(0.8))
+                .zIndex(1)
+                
+                Rectangle()
+                    .fill(Color.black)
+                    .frame(height: 1)
+                
+                if viewModel.showingCameraSearchResults{
+                    SearchResultsOverlay(viewModel: viewModel)
+                        .contentShape(Rectangle())
+                        .frame(height: 200)
+                }
                 Spacer()
+                
+                if viewModel.canShowSelectionScroll {
+                    objectSelectionScroll //scroll
+                }
                 bottomControls
             }
         }
         .ignoresSafeArea()
+        .navigationBarBackButtonHidden(true)
         .navigationDestination(isPresented: $viewModel.showingGallery) {
             GalleryView(viewModel: viewModel)
         }
-        .onAppear {
-            // Simulate detection for testing
-            viewModel.simulateDetection()
-        }
     }
     
-    private func floating3DHanzi(word: Vocabulary) -> some View {
+    func floating3DHanzi(word: Vocabulary) -> some View {
         VStack(spacing: 8) {
             // hints
-            Text("Tap to capture")
+            Text("Capture the hanzi")
                 .font(.subheadline)
                 .foregroundColor(Color(.systemBackground).opacity(0.8))
                 .padding(.bottom, 40)
@@ -52,68 +120,23 @@ struct CameraView: View {
                 .shadow(color: .black.opacity(0.5), radius: 10, x: 0, y: 5)
             
         }
-        .offset(y: -100) //little up
+        .padding(.bottom, 80)
+//        .offset(y: -100) //little up
     }
+
     
-    private var wordCard: some View {
-        ZStack {
-            Color.black.opacity(0.7)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    if viewModel.cameraState == .traced {
-                        viewModel.animateCardToGallery()
+    var objectSelectionScroll: some View{
+        ScrollView(.horizontal){
+            HStack{
+                ForEach(Vocabulary.quickSelectObjects, id: \.self) { object in
+                    ObjectButton(objectName: object,
+                                 isSelected: viewModel.detectedWord?.object == object) {
+                        viewModel.selectObject(object)
                     }
                 }
-            
-            VStack(spacing: 20) {
-                // helper text - in future, should only appear first time user is tracing
-                if viewModel.shouldShowTracingInstructions {
-                    Text("Trace the hanzi to collect this word")
-                        .font(.subheadline)
-                        .foregroundColor(Color(.systemBackground).opacity(0.6))
-                        .padding(.bottom, 40)
-                    
-                } else if viewModel.shouldShowCompletionInfo {
-                    Text("Tap anywhere to continue...")
-                        .font(.subheadline)
-                        .foregroundColor(Color(.systemBackground).opacity(0.6))
-                        .padding(.bottom, 40)
-                }
-                
-                if viewModel.shouldShowTracingButton {
-                    Button {
-                        viewModel.completeTracing()
-                    } label: {
-                        Text("Simulate Tracing Complete")
-                            
-                    }
-                }
-                // Card
-                VStack(spacing: 16) {
-                    // pinyin
-                    Text(viewModel.shouldShowCompletionInfo ? (viewModel.detectedWord?.pinyin ?? "") : "")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .foregroundColor(viewModel.shouldShowCompletionInfo ? .primary : .clear)
-                    
-                    // hanzi
-                    Text(viewModel.detectedWord?.hanzi ?? "")
-                        .font(.system(size: 100))
-                        .foregroundColor(.primary)
-                    
-                    // translation
-                    Text(viewModel.shouldShowCompletionInfo ? (viewModel.detectedWord?.english ?? "") : "")
-                        .font(.headline)
-                        .foregroundColor(viewModel.shouldShowCompletionInfo ? .secondary : .clear)
-                }
-                .frame(width: 300, height: 300)
-                .background(Color(red: 212/255, green: 219/255, blue: 227/255))
-                .cornerRadius(24)
-                .shadow(color: .black.opacity(0.3), radius: 20, y: 10)
-                
             }
-            .offset(y: -80) //move up
         }
+        .padding(.bottom, 20)
     }
     
     private var bottomControls: some View {
@@ -124,22 +147,20 @@ struct CameraView: View {
             
             HStack {
                 
-                // Gallery
+                // Gallery icon
                 Button {
                 viewModel.showingGallery = true
             } label: {
                 ZStack {
-                    Circle()
-                        .fill(Color.gray.opacity(0.5))
-                        .frame(width: 60, height: 60)
-                    
-                    if let lastCollected = viewModel.collectedWords().last {
-                        VStack(spacing: 2) {
-                            Text(lastCollected.hanzi)
-                                .font(.system(size: 20))
-                                .foregroundColor(.white)
-                        }
+                    if let lastCollected = viewModel.collectedWordsWithImages.last {
+                        WordCardCollected(word: lastCollected)
+                            .frame(width: 60, height: 60)
+                            .clipShape(Circle())
                     } else {
+                        Circle()
+                            .fill(Color.gray.opacity(0.5))
+                            .frame(width: 60, height: 60)
+                        
                         Image(systemName: "photo")
                             .font(.system(size: 24))
                             .foregroundColor(.white)
@@ -193,9 +214,33 @@ struct CameraView: View {
         .background(Color(red: 79/255, green: 89/255, blue: 114/255).opacity(0.8))
         }
     }
-    
+
+    struct ObjectButton: View{
+        let objectName: String
+        let isSelected: Bool
+        let action: () -> Void
+        
+        var body: some View{
+            Button {
+                action()
+            } label: {
+                Text(objectName.capitalized)
+                    .font(.caption)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .fontWeight(isSelected ? .bold : .regular)
+                    .foregroundColor(isSelected ? .white : .black.opacity(0.7))
+                    .background(isSelected ? Color(red: 79/255, green: 89/255, blue: 114/255) : .white)
+                    .cornerRadius(20)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(.black, lineWidth: 1)
+                    )
+            }
+        }
+    }
 }
 
-#Preview {
-    CameraView(viewModel: SearchVM())
-}
+ #Preview {
+     CameraView(viewModel: SearchVM())
+ }

@@ -12,24 +12,33 @@ enum CameraState {
 @MainActor
 class SearchVM: ObservableObject {
     @Published var allVocabulary: [Vocabulary]
-    @Published var murals: [Mural]
-    
     @Published var cameraState: CameraState = .scanning
     @Published var detectedWord: Vocabulary? = nil
-    @Published var capturedImage: UIImage? = nil
     @Published var showingGallery = false
-    
     @Published var cameraSearchText = ""
     @Published var showingCameraSearchResults = false
+    @Published var shouldCapturePhoto = false
+    @Published var capturedImage: UIImage? = nil
+    @Published var collectedWordsWithImages: [CollectedWord] = []
+
+//    @Published var capturedImage: UIImage? = nil {
+//        didSet {
+//            if let image = capturedImage {
+//                print("📸 capturedImage set! Size: \(image.size)")
+//                handleImageCaptured()
+//            } else {
+//                print("📸 capturedImage cleared")
+//            }
+//        }
+//    }
     
-    // Card animation
+    // animation- might del
     @Published var cardAnimatingToGallery = false
     @Published var cardOffset: CGSize = .zero //?? useless
     
     
     init() {
         self.allVocabulary = VocabularyLoader.loadFromJSON()
-        self.murals = Mural.samples
     }
         
     func search(query: String) -> [Vocabulary] {
@@ -144,19 +153,51 @@ class SearchVM: ObservableObject {
     
     func captureObject() {
         guard detectedWord != nil else { return }
-        
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+        print("1️⃣ Capture button pressed")
+//        isCapturing = true
+        shouldCapturePhoto = true
+        withAnimation {
             cameraState = .showingCard
         }
     }
     
+    func handlePhotoCaptured(_ image: UIImage) {
+        capturedImage = image
+        shouldCapturePhoto = false
+        print("2️⃣ handlePhotoCaptured called, size: \(image.size)")
+
+        // why are we doing this in both the captureObject and handlePhotoCaptured?
+        withAnimation {
+            cameraState = .showingCard
+        }
+    }
+    
+//    private func handleImageCaptured() {
+//        guard cameraState == .scanning else { return }
+//        
+//        shouldCapturePhoto = false
+//        isCapturing = false
+//        
+//        withAnimation {
+//            cameraState = .showingCard
+//        }
+//    }
+    
     func completeTracing() {
-        guard let word = detectedWord else { return }
+        guard let word = detectedWord, let image = capturedImage else { return }
         
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+        withAnimation {
             cameraState = .traced
         }
         
+        let collected = CollectedWord(
+            vocabulary: word,
+            capturedImage: image,
+            capturedDate: Date()
+        )
+        collectedWordsWithImages.append(collected)
+        
+        // Mark as collected
         collectWord(object: word.object)
     }
     
@@ -183,6 +224,9 @@ class SearchVM: ObservableObject {
         detectedWord = nil
         cardAnimatingToGallery = false
         cardOffset = .zero
+        capturedImage = nil
+        shouldCapturePhoto = false
+//        isCapturing = false
     }
 }
 
