@@ -154,8 +154,14 @@ class SearchVM: ObservableObject {
     func captureObject() {
         guard detectedWord != nil else { return }
         print("1️⃣ Capture button pressed")
-//        isCapturing = true
         shouldCapturePhoto = true
+            
+            #if targetEnvironment(simulator)
+            // Simulator: skip real photo capture, use placeholder
+            let placeholder = UIImage(systemName: "photo") ?? UIImage()
+            handlePhotoCaptured(placeholder)
+            #endif
+    
         withAnimation {
             cameraState = .showingCard
         }
@@ -171,18 +177,7 @@ class SearchVM: ObservableObject {
             cameraState = .showingCard
         }
     }
-    
-//    private func handleImageCaptured() {
-//        guard cameraState == .scanning else { return }
-//        
-//        shouldCapturePhoto = false
-//        isCapturing = false
-//        
-//        withAnimation {
-//            cameraState = .showingCard
-//        }
-//    }
-    
+  
     func completeTracing() {
         guard let word = detectedWord, let image = capturedImage else { return }
         

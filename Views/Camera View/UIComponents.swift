@@ -93,7 +93,7 @@ struct UIComponents: View {
                 ? "Select an object from the scroll or search bar, then point your camera at it"
                 : "Capture the object with camera button!"
         case .showingCard, .tracing:
-            return "Trace the character on card with your finger, then click Done to collect it"
+            return "Trace the character with your finger, then click Done to collect it"
         case .traced:
             return "Tap anywhere to continue hunting for more words!"
         }

@@ -31,7 +31,7 @@ struct WordCard: View {
                     Button {
                         viewModel.completeTracing()
                     } label: {
-                        Text("Done Tracing ✓")
+                        Text("Done Tracing")
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 32)

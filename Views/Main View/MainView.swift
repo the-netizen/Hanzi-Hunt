@@ -23,10 +23,8 @@ struct MainView: View {
                     VStack {
                         HStack{
                             //Logo image will be here
-                            Image(systemName: "logo1.png")
-                                .resizable()
-//                                .font(.system(size: 24))
-//                                .foregroundColor(.white)
+                            Text("HanziHunt")
+                                .foregroundColor(.white)
                             
                             Spacer()
                             
@@ -55,7 +53,7 @@ struct MainView: View {
                         }//header hstack
                         .padding(.horizontal, 25)
                     }//header v
-                    .padding(.vertical, 20)
+                    .padding(.top, 20)
 //                    .background(Color(red: 50/255, green: 60/255, blue: 69/255))
                     .background(Color(red: 79/255, green: 89/255, blue: 114/255))
                     .zIndex(1) // Keep header above other content
@@ -71,7 +69,7 @@ struct MainView: View {
                                 .padding(.horizontal, 20)
                             GalleryGrid(viewModel: viewModel, onTap: { _ in })
                         }
-                        .padding(.top, 80)
+                        .padding(.top, 50)
                         
                         // Camera Button on top
                         Button {
