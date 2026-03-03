@@ -1,6 +1,8 @@
 ### An interactive vocabulary building app for Mandarin Chinese that turns your surroundings into a classroom
 <div align="center">
   <img src="https://github.com/user-attachments/assets/89dabb08-e048-4b5b-bcaa-ab6eae948426" width="200"/>
+<img width="1321" height="769" alt="Screenshot 2026-03-03 at 9 15 10 AM" src="https://github.com/user-attachments/assets/26e63435-101d-478b-825e-f93e68410542" />
+
 </div>
 
 <br>
